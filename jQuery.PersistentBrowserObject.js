@@ -19,58 +19,55 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-(function(){
-    function PersistentBrowserObject(UniquePrefix, MemoryCache)
+(function() {
+    "use strict";
+    function PersistentBrowserObject(UniquePrefix, MemoryCache) 
     {
         this.UniquePrefix = UniquePrefix;
         this.MemoryCache = MemoryCache;
         this.Instance = null;
-        
-        if(typeof(localStorage[this.UniquePrefix+'Object'])=='undefined')
+        if(localStorage[this.UniquePrefix + 'Object'] === undefined)
         {  
-            localStorage[this.UniquePrefix+'Object'] = JSON.stringify({});
+            localStorage[this.UniquePrefix + 'Object'] = JSON.stringify({});
         }
         
         if(this.MemoryCache)
         {
-            this.Instance = JSON.parse(localStorage[this.UniquePrefix+'Object']);
+            this.Instance = JSON.parse(localStorage[this.UniquePrefix + 'Object']);
         }
         
         if(!PersistentBrowserObject.prototype.HasMemoryCache)
         {
-            PersistentBrowserObject.prototype.HasMemoryCache = function(){
+            PersistentBrowserObject.prototype.HasMemoryCache = function() {
                 return !(this.Instance === null);
             };
             
-            PersistentBrowserObject.prototype.GetInstance = function(){
-                if(this.Instance)
+            PersistentBrowserObject.prototype.GetInstance = function() {
+                if(this.Instance) 
                 {
                     return this.Instance;
                 }
-                else
-                {
-                    return JSON.parse(localStorage[this.UniquePrefix+'Object']);
-                }
+                return JSON.parse(localStorage[this.UniquePrefix + 'Object']);
             };
             
-            PersistentBrowserObject.prototype.Get = function(Name){
+            PersistentBrowserObject.prototype.Get = function(Name) {
                 var Instance = this.GetInstance();
                 return(Instance[Name]);
             };
             
-            PersistentBrowserObject.prototype.Set = function(Name, Value){
-                var Instance = this.GetInstance();
-                if(Name&&Value)
+            PersistentBrowserObject.prototype.Set = function(NameOrObject, Value) {
+                var Instance = this.GetInstance(), Key;
+                if(NameOrObject && Value) 
                 {
-                    Instance[Name]=Value;
+                    Instance[NameOrObject] = Value;
                 }
-                else if(typeof arguments[0] == "object")
+                else if(typeof NameOrObject === "object")
                 {
-                    for(var Key in arguments[0])
+                    for(Key in NameOrObject)
                     {
-                        if(arguments[0].hasOwnProperty(Key))
+                        if(NameOrObject.hasOwnProperty(Key))
                         {
-                            Instance[Key]=arguments[0][Key];
+                            Instance[Key] = NameOrObject[Key];
                         }
                     }
                 }
@@ -78,23 +75,23 @@ THE SOFTWARE.
                 {
                     throw new TypeError("PersistentBrowserObject: Invalid parameters passed to Set accessor. Either pass a single Key:Value pair as separate arguments or an object containing the Key:Value pairs you want to assign.");
                 }
-                localStorage[this.UniquePrefix+'Object'] = JSON.stringify(Instance);
+                localStorage[this.UniquePrefix + 'Object'] = JSON.stringify(Instance);
             };
             
-            PersistentBrowserObject.prototype.Delete = function(Name){
+            PersistentBrowserObject.prototype.Delete = function(Name) {
                 var Instance = this.GetInstance();
                 delete Instance[Name];
-                localStorage[this.UniquePrefix+'Object'] = JSON.stringify(Instance);
+                localStorage[this.UniquePrefix + 'Object'] = JSON.stringify(Instance);
             };
         }
     }
     
-    if(jQuery)
+    if(window.jQuery===undefined)
     {
-        jQuery.PersistentBrowserObject = PersistentBrowserObject;
+        window.PersistentBrowserObject = PersistentBrowserObject;
     }
     else
     {
-        window.PersistentBrowserObject = PersistentBrowserObject;
+        window.jQuery.PersistentBrowserObject = PersistentBrowserObject;
     }
 })();
