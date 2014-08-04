@@ -21,33 +21,34 @@ THE SOFTWARE.
 */
 (function() {
     "use strict";
-    function PersistentBrowserObject(UniquePrefix, MemoryCache) 
+    var SharedCache = {};   //Prototype or closure, that is the question :P. Closure won due to less typing and less complexity on external interface
+    var Parser = JSON;
+    function PersistentBrowserObject(Identifier, MemoryCache) 
     {
-        this.UniquePrefix = UniquePrefix;
-        this.MemoryCache = MemoryCache;
-        this.Instance = null;
-        if(localStorage[this.UniquePrefix + 'Object'] === undefined)
-        {  
-            localStorage[this.UniquePrefix + 'Object'] = JSON.stringify({});
-        }
-        
-        if(this.MemoryCache)
+        if(!PersistentBrowserObject.prototype.GetInstance)
         {
-            this.Instance = JSON.parse(localStorage[this.UniquePrefix + 'Object']);
-        }
-        
-        if(!PersistentBrowserObject.prototype.HasMemoryCache)
-        {
-            PersistentBrowserObject.prototype.HasMemoryCache = function() {
-                return !(this.Instance === null);
+            PersistentBrowserObject.prototype.GetCacheType = function(){
+                return this.CacheType;
             };
             
             PersistentBrowserObject.prototype.GetInstance = function() {
-                if(this.Instance) 
+                if(this.CacheType===PersistentBrowserObject.Cache.Instance)
                 {
-                    return this.Instance;
+                    if(!this.InstanceCache)
+                    {
+                        this.InstanceCache = PersistentBrowserObject.Retrieve(this.Identifier + 'Object');
+                    }
+                    return this.InstanceCache;
                 }
-                return JSON.parse(localStorage[this.UniquePrefix + 'Object']);
+                else if(this.CacheType===PersistentBrowserObject.Cache.Shared)
+                {
+                    if(!SharedCache[this.Identifier])
+                    {
+                        SharedCache[this.Identifier] = PersistentBrowserObject.Retrieve(this.Identifier + 'Object');
+                    }
+                    return SharedCache[this.Identifier];
+                }
+                return PersistentBrowserObject.Retrieve(this.Identifier + 'Object');
             };
             
             PersistentBrowserObject.prototype.Get = function(Name) {
@@ -75,16 +76,61 @@ THE SOFTWARE.
                 {
                     throw new TypeError("PersistentBrowserObject: Invalid parameters passed to Set accessor. Either pass a single Key:Value pair as separate arguments or an object containing the Key:Value pairs you want to assign.");
                 }
-                localStorage[this.UniquePrefix + 'Object'] = JSON.stringify(Instance);
+                PersistentBrowserObject.Store(this.Identifier + 'Object', Instance);
             };
             
             PersistentBrowserObject.prototype.Delete = function(Name) {
                 var Instance = this.GetInstance();
                 delete Instance[Name];
-                localStorage[this.UniquePrefix + 'Object'] = JSON.stringify(Instance);
+                PersistentBrowserObject.Store(this.Identifier + 'Object', Instance);
             };
         }
+        this.Identifier = Identifier;
+        if(MemoryCache===undefined)
+        {
+            this.CacheType = PersistentBrowserObject.Cache.None;
+        }
+        else
+        {
+            this.CacheType = MemoryCache;
+        }
+        
+        this.InstanceCache = null;
+        if(!PersistentBrowserObject.Exists(this.Identifier + 'Object'))
+        {   
+            PersistentBrowserObject.Store(this.Identifier + 'Object', {});
+        }
+        
+        if(this.CacheType==PersistentBrowserObject.Cache.Instance||this.CacheType==PersistentBrowserObject.Cache.Shared)
+        {
+            this.GetInstance(); //Called to initialize cache if needed
+        }
     }
+    
+    PersistentBrowserObject.Cache = {'None':0, 'Instance': 1, 'Shared': 2};
+    
+    PersistentBrowserObject.CleanSharedCache = function(Key){
+        if(Key)
+        {
+            delete SharedCache[Key];
+        }
+        else
+        {
+            SharedCache = {};
+        }
+    };
+    
+    PersistentBrowserObject.Store = function(Key, Value){
+        localStorage[Key] = JSON.stringify(Value);
+    };
+    
+    PersistentBrowserObject.Retrieve = function(Key){
+        return JSON.parse(localStorage[Key]);
+    };
+    
+    PersistentBrowserObject.Exists = function(Key){
+        return localStorage[Key] !== undefined;
+    };
     
     if(window.jQuery===undefined)
     {

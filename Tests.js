@@ -33,7 +33,7 @@ QUnit.test("Proper Basic Storage", function( assert ) {
     localStorage.clear();
     var Test = new jQuery.PersistentBrowserObject('Test');
     assert.ok(typeof Test.Get('Should Not Exist') == 'undefined', "Confirming properties that should not exist are undefined.");
-    assert.ok(!Test.HasMemoryCache(), "Confirming that cache is not enabled by default.");
+    assert.ok(Test.GetCacheType()==jQuery.PersistentBrowserObject.Cache.None, "Confirming that cache is not enabled by default.");
     Test.Set('One',1);
     assert.ok(Test.Get('One') && Test.Get('One') == 1, "Confirming basic usage for getter works.");
     Test.Set({'One': -1, 'Two': -2, 'Three': -3});
@@ -45,6 +45,7 @@ QUnit.test("Proper Basic Storage", function( assert ) {
     var ComplicatedGet = Test.Get('Complicated');
     //This is essentially a test of the browser's JSON encoder/parser, but for completeness...
     assert.ok(ComplicatedGet&&ComplicatedGet[0]&&ComplicatedGet[0]['str']&&ComplicatedGet[0]['str'][1]&&ComplicatedGet[0]['str'][1]==Complicated[0]['str'][1], "Confirming storage of complex objects works");
+    localStorage.clear();
 });
 
 QUnit.test("Multiple Instances Without Caching", function( assert ) {
@@ -61,18 +62,38 @@ QUnit.test("Multiple Instances Without Caching", function( assert ) {
     assert.ok(Test.Get('One')==1, "Confirming objects can't pollute existing objects with a different name with setter.");
     Test2.Delete('One');
     assert.ok(Test.Get('One'), "Confirming objects can't pollute existing objects with a different name with deleter.");
+    localStorage.clear();
 });
 
-QUnit.test("Caching", function( assert ) {
+QUnit.test("Instance Caching", function( assert ) {
     localStorage.clear();
-    var Test = new jQuery.PersistentBrowserObject('Test', true);
-    assert.ok(Test.HasMemoryCache(), "Confirming that cache is enabled.");
+    var Test = new jQuery.PersistentBrowserObject('Test', jQuery.PersistentBrowserObject.Cache.Instance);
+    assert.ok(Test.GetCacheType()===jQuery.PersistentBrowserObject.Cache.Instance, "Confirming that instance cache is enabled.");
     Test.Set('One',1);
     Test.Set({'Two': 2, 'Three': 3});
-    assert.ok(Test.Get('One')&&Test.Get('One')==1, "Confirming simple setter and getter work with cache.");
-    assert.ok(Test.Get('Two')&&Test.Get('Two')==2&&Test.Get('Three')&&Test.Get('Three')==3, "Confirming object setter works with cache.");
-    var TestSynonim = new jQuery.PersistentBrowserObject('Test', true);
-    assert.ok(TestSynonim.Get('Two')&&TestSynonim.Get('Two')==2&&TestSynonim.Get('Three')&&TestSynonim.Get('Three')==3, "Confirming changes are still committed to persistent store when cache is enabled.");
+    assert.ok(Test.Get('One')&&Test.Get('One')==1, "Confirming simple setter and getter work with instance cache.");
+    assert.ok(Test.Get('Two')&&Test.Get('Two')==2&&Test.Get('Three')&&Test.Get('Three')==3, "Confirming object setter works with instance cache.");
+    var TestSynonim = new jQuery.PersistentBrowserObject('Test', jQuery.PersistentBrowserObject.Cache.Instance);
+    assert.ok(TestSynonim.Get('Two')&&TestSynonim.Get('Two')==2&&TestSynonim.Get('Three')&&TestSynonim.Get('Three')==3, "Confirming changes are still committed to persistent store when instance cache is enabled.");
     localStorage.clear();
-    assert.ok(Test.Get('Two')&&Test.Get('Two')==2&&Test.Get('Three')&&Test.Get('Three')==3, "Confirming beyond doubt that getter is fetched from memory with cache.");
+    assert.ok(Test.Get('Two')&&Test.Get('Two')==2&&Test.Get('Three')&&Test.Get('Three')==3, "Confirming beyond doubt that getter is fetched from memory with instance cache.");
+});
+
+QUnit.test("Shared Caching", function( assert ) {
+    localStorage.clear();
+    var Test = new jQuery.PersistentBrowserObject('Test', jQuery.PersistentBrowserObject.Cache.Shared);
+    assert.ok(Test.GetCacheType()===jQuery.PersistentBrowserObject.Cache.Shared, "Confirming that shared cache is enabled.");
+    Test.Set('One',1);
+    Test.Set({'Two': 2, 'Three': 3});
+    assert.ok(Test.Get('One')&&Test.Get('One')==1, "Confirming simple setter and getter work with shared cache.");
+    assert.ok(Test.Get('Two')&&Test.Get('Two')==2&&Test.Get('Three')&&Test.Get('Three')==3, "Confirming object setter works with shared cache.");
+    var TestSynonim = new jQuery.PersistentBrowserObject('Test', jQuery.PersistentBrowserObject.Cache.Shared);
+    assert.ok(TestSynonim.Get('Two')&&TestSynonim.Get('Two')==2&&TestSynonim.Get('Three')&&TestSynonim.Get('Three')==3, "Confirming changes are still committed to persistent store when shared cache is enabled.");
+    Test.Set({'One': -1, 'Two': -2, 'Three': -3});
+    assert.ok(TestSynonim.Get('One')==-1&&TestSynonim.Get('Two')==-2&&TestSynonim.Get('Three')==-3, "Confirming that objects with shared cache are in sync.");
+    Test2 = new jQuery.PersistentBrowserObject('Test2', jQuery.PersistentBrowserObject.Cache.Shared);
+    Test2.Set({'One': 1, 'Four': 4, 'Five': 5});
+    assert.ok(Test.Get('Four')===undefined&&Test.Get('Five')===undefined&&Test.Get('One')==-1, "Confirmed that shared cache keep storage for objects with diffent names distinct.")
+    localStorage.clear();
+    assert.ok(Test2.Get('One')&&Test2.Get('One')==1, "Confirming beyond doubt that getter is fetched from memory with shared cache.");
 });
