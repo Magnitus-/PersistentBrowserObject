@@ -8,7 +8,7 @@ It started its life as an get/set accessor generator script to store options for
 Requirements
 ============
 
-- A browser that supports the JSON and localStorage APIs.
+- A browser that supports the JSON and localStorage APIs, though you can waive those requirements if you customize the library (read below)
 
 - jQuery is optional. If present, the library will assign its constructor as a property of the jQuery object, else it will assign its constructor as a property of the global window object.
 
@@ -42,14 +42,74 @@ var Other = new jQuery.PersistentBrowserObject('DifferentObject');
 console.log(Other.Get('Name'));                                          //logs 'undefined', because it is 'DifferentObject' and uses a different storage entry from 'SimpleObject'
 ```
 
-You can also specify that a PersistentBrowserObject instance uses a memory cache to minize access to localStorage, mostly useful for objects that perform a lot of Get.
-The syntax is as follows:
+Caching
+=======
+
+By default, objects from the library always read and write to permanent storage whenever Get/Set are called.
+
+If you do a lot of Get calls, the library provides caching facilities to improve on speed.
+
+The caching facilities are as follow:
+
+1) Instance Caching
+
+Syntax:
 
 ```javascript
-var InstanceThatUsesCache = new jQuery.PersistentBrowserObject('CoolObject', true);  
+var InstanceThatUsesCache = new jQuery.PersistentBrowserObject('ObjectIdentifier', jQuery.PersistentBrowserObject.Cache.Instance);  
 ```
 
-However, when using several instances sharing the same localStorage entry: you should only use memory cache either on singletons or several instances that only call Get. Otherwise, be prepared for the following consequences:
+This works well as long as you don't have several concurrent objects with the same identifier that call the Set method.
 
-- If you have 1 instance that performs Set and other cache-using instances that perform Get, the Cache-using instances won't see the changes from the Set calls.
-- If you have several cache-using instances that perform Set, they'll negate the effect of each other's Set calls.
+If there are, they won't see each other's changes and corrupt each other's updates.
+
+Instance caching is best used for singletons or groups of read-only objects (objects that only call the Get method).
+
+1) Shared Caching
+
+Syntax:
+
+```javascript
+var InstanceThatUsesCache = new jQuery.PersistentBrowserObject('ObjectIdentifier', jQuery.PersistentBrowserObject.Cache.Instance);  
+```
+
+Shared caching provides the best of both worlds. It provides cache and allows you to use concurrent objects that won't corrupt each other's data.
+
+However, unless you clean it up, data in the shared cache will persist for the lifetime of the user's browser session which may or may not be what you want.
+
+To clean up the shared cache for a specific object name (for example, with the object above), the syntax is:
+
+```javascript
+PersistentBrowserObject.CleanSharedCache('ObjectIdentifier'); 
+```
+
+Alternatively, you can clean the entire shared cache by calling the above function with an argument as follows:
+
+```javascript
+PersistentBrowserObject.CleanSharedCache(); 
+```
+
+Customization
+=============
+
+By default, the library uses the built-in JSON object (ie, window.JSON) to render and parse JSON and the built-in localStorage object (ie, window.localStorage) for permanent storage.
+
+If you'd prefer a different solution (ie, custom JSON library, sessionStorage instead of localStorage, cookie fallback for browsers that don't support localStorage, etc), you can assign your own functions to the following properties:
+
+- PersistentBrowserObject.Store
+
+This method takes a key as its first argument, a value as its second argument and associates the value with the key in the permanent storage.
+
+If the key doesn't exist, it is created with the given value, else it is updated with the given value.
+
+- PersistentBrowserObject.Retrieve
+
+This method takes a key as its only argument and fetches the value associated with the key in the permanent storage.
+
+If the value is not found, it returns undefined.
+
+- PersistentBrowserObject.Exists
+
+This method returns true if the key exists in the permanent storage, else it returns false.
+
+As long as you follow the above interface, the library will work with your custom functions. Feel free to tweak the Tests.js in order to test it if you are unsure.

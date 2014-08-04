@@ -22,7 +22,6 @@ THE SOFTWARE.
 (function() {
     "use strict";
     var SharedCache = {};   //Prototype or closure, that is the question :P. Closure won due to less typing and less complexity on external interface
-    var Parser = JSON;
     function PersistentBrowserObject(Identifier, MemoryCache) 
     {
         if(!PersistentBrowserObject.prototype.GetInstance)
