@@ -70,7 +70,7 @@ Instance caching is best used for singletons or groups of read-only objects (obj
 Syntax:
 
 ```javascript
-var InstanceThatUsesCache = new jQuery.PersistentBrowserObject('ObjectIdentifier', jQuery.PersistentBrowserObject.Cache.Instance);  
+var InstanceThatUsesCache = new jQuery.PersistentBrowserObject('ObjectIdentifier', jQuery.PersistentBrowserObject.Cache.Shared);  
 ```
 
 Shared caching provides the best of both worlds. It provides cache and allows you to use concurrent objects that won't corrupt each other's data.
@@ -106,7 +106,7 @@ If the key doesn't exist, it is created with the given value, else it is updated
 
 This method takes a key as its only argument and fetches the value associated with the key in the permanent storage.
 
-If the value is not found, it returns undefined.
+If the key is not found, it returns undefined.
 
 - PersistentBrowserObject.Exists
 
