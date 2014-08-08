@@ -1,9 +1,9 @@
 PersistentBrowserObject
 =======================
 
-This library is used to give more of an object-oriented feel to the localStorage API.
+This library is used to give more of an object-oriented feel to the localStorage API by default. 
 
-It started its life as an get/set accessor generator script to store options for a javascript library I plan to bring on Github later and then the "This should be separate. How can I generalize this?" OCD kicked in and this is the result.
+It also allows for a fair amount of optimization: caching, custom storage and specification of an ordering of fallback storage solutions, in order of priority. 
 
 Requirements
 ============
@@ -91,6 +91,8 @@ PersistentBrowserObject.CleanSharedCache();
 
 Customization
 =============
+
+Note: Obseleted by latest changes. Documentation update to come soon.
 
 By default, the library uses the built-in JSON object (ie, window.JSON) to render and parse JSON and the built-in localStorage object (ie, window.localStorage) for permanent storage.
 

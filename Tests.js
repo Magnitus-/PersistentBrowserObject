@@ -29,9 +29,10 @@ QUnit.test("NameSpace", function( assert ) {
     assert.ok(jQuery.PersistentBrowserObject, "Confirmed PersistentBrowserObject exists in jQuery namespace.");
 });
 
-QUnit.test("Proper Basic Storage", function( assert ) {
-    localStorage.clear();
-    var Test = new jQuery.PersistentBrowserObject('Test');
+function SingletonStorageTest(assert, ClearFunction, CustomFallbackList)
+{
+    ClearFunction();
+    var Test = new jQuery.PersistentBrowserObject('Test', jQuery.PersistentBrowserObject.Cache.None, CustomFallbackList);
     assert.ok(typeof Test.Get('Should Not Exist') == 'undefined', "Confirming properties that should not exist are undefined.");
     assert.ok(Test.GetCacheType()==jQuery.PersistentBrowserObject.Cache.None, "Confirming that cache is not enabled by default.");
     Test.Set('One',1);
@@ -45,24 +46,73 @@ QUnit.test("Proper Basic Storage", function( assert ) {
     var ComplicatedGet = Test.Get('Complicated');
     //This is essentially a test of the browser's JSON encoder/parser, but for completeness...
     assert.ok(ComplicatedGet&&ComplicatedGet[0]&&ComplicatedGet[0]['str']&&ComplicatedGet[0]['str'][1]&&ComplicatedGet[0]['str'][1]==Complicated[0]['str'][1], "Confirming storage of complex objects works");
-    localStorage.clear();
-});
+    ClearFunction();
+}
 
-QUnit.test("Multiple Instances Without Caching", function( assert ) {
-    localStorage.clear();
-    var Test = new jQuery.PersistentBrowserObject('Test');
-    var TestSynonim = new jQuery.PersistentBrowserObject('Test');
+function ConcurrentStorageTest(assert, ClearFunction, CustomFallbackList)
+{
+    ClearFunction();
+    var Test = new jQuery.PersistentBrowserObject('Test', jQuery.PersistentBrowserObject.Cache.None, CustomFallbackList);
+    var TestSynonim = new jQuery.PersistentBrowserObject('Test', jQuery.PersistentBrowserObject.Cache.None, CustomFallbackList);
     Test.Set('One',1);
     assert.ok(TestSynonim.Get('One') == 1, "Propagation of changes across existing instances works.");
-    var TestSynonimSynonim = new jQuery.PersistentBrowserObject('Test');
+    var TestSynonimSynonim = new jQuery.PersistentBrowserObject('Test', jQuery.PersistentBrowserObject.Cache.None, CustomFallbackList);
     assert.ok(TestSynonimSynonim.Get('One') == 1, "Propagation of changes to new instances works.");
-    var Test2 = new jQuery.PersistentBrowserObject('Test2');
+    var Test2 = new jQuery.PersistentBrowserObject('Test2', jQuery.PersistentBrowserObject.Cache.None, CustomFallbackList);
     assert.ok(!Test2.Get('One'), "Confirming new objects can't get the properties of other names.");
     Test2.Set('One', 2);
     assert.ok(Test.Get('One')==1, "Confirming objects can't pollute existing objects with a different name with setter.");
     Test2.Delete('One');
     assert.ok(Test.Get('One'), "Confirming objects can't pollute existing objects with a different name with deleter.");
-    localStorage.clear();
+    ClearFunction();
+}
+
+QUnit.test("No Cache Default localStorage Storage, Singleton", function( assert ) {
+    function Clear()
+    {
+        localStorage.clear();
+    }
+    SingletonStorageTest(assert, Clear);
+});
+
+QUnit.test("No Cache sessionStorage Storage, Singleton", function( assert ) {
+    function Clear()
+    {
+        sessionStorage.clear();
+    }
+    SingletonStorageTest(assert, Clear, [jQuery.PersistentBrowserObject.Storage.sessionStorage]);
+});
+
+QUnit.test("No Cache Memory Storage, Singleton", function( assert ) {
+    function Clear()
+    {
+        localStorage.clear();
+    }
+    SingletonStorageTest(assert, Clear, [jQuery.PersistentBrowserObject.Storage.Memory]);
+});
+
+QUnit.test("No Cache Default localStorage Storage, Multiple Instances", function( assert ) {
+    function Clear()
+    {
+        localStorage.clear();
+    }
+    ConcurrentStorageTest(assert, Clear);
+});
+
+QUnit.test("No Cache sessionStorage Storage, Multiple Instances", function( assert ) {
+    function Clear()
+    {
+        sessionStorage.clear();
+    }
+    ConcurrentStorageTest(assert, Clear, [jQuery.PersistentBrowserObject.Storage.sessionStorage]);
+});
+
+QUnit.test("No Cache Memory Storage, Multiple Instances", function( assert ) {
+    function Clear()
+    {
+        sessionStorage.clear();
+    }
+    ConcurrentStorageTest(assert, Clear, [jQuery.PersistentBrowserObject.Storage.Memory]);
 });
 
 QUnit.test("Instance Caching", function( assert ) {

@@ -21,9 +21,33 @@ THE SOFTWARE.
 */
 (function() {
     "use strict";
-    var SharedCache = {};   //Prototype or closure, that is the question :P. Closure won due to less typing and less complexity on external interface
-    function PersistentBrowserObject(Identifier, MemoryCache) 
-    {
+    //Lower level details that are hidden away in closures
+    var SharedCache = {};   
+    function InitializeInternals(MemoryCache) {
+        if(MemoryCache===undefined)
+        {
+            this.CacheType = PersistentBrowserObject.Cache.None;
+        }
+        else
+        {
+            this.CacheType = MemoryCache;
+        }
+        
+        this.InstanceCache = null;
+        if(!this.Exists(this.Identifier + 'Object'))
+        {   
+            this.Store(this.Identifier + 'Object', {});
+        }
+        
+        if(this.CacheType==PersistentBrowserObject.Cache.Instance||this.CacheType==PersistentBrowserObject.Cache.Shared)
+        {
+            this.GetInstance(); //Called to initialize cache if needed
+        }
+    }
+    
+    //Constructor
+    function PersistentBrowserObject(Identifier, MemoryCache, CustomFallbackList) 
+    {   
         if(!PersistentBrowserObject.prototype.GetInstance)
         {
             PersistentBrowserObject.prototype.GetCacheType = function(){
@@ -35,7 +59,7 @@ THE SOFTWARE.
                 {
                     if(!this.InstanceCache)
                     {
-                        this.InstanceCache = PersistentBrowserObject.Retrieve(this.Identifier + 'Object');
+                        this.InstanceCache = this.Retrieve(this.Identifier + 'Object');
                     }
                     return this.InstanceCache;
                 }
@@ -43,11 +67,11 @@ THE SOFTWARE.
                 {
                     if(!SharedCache[this.Identifier])
                     {
-                        SharedCache[this.Identifier] = PersistentBrowserObject.Retrieve(this.Identifier + 'Object');
+                        SharedCache[this.Identifier] = this.Retrieve(this.Identifier + 'Object');
                     }
                     return SharedCache[this.Identifier];
                 }
-                return PersistentBrowserObject.Retrieve(this.Identifier + 'Object');
+                return this.Retrieve(this.Identifier + 'Object');
             };
             
             PersistentBrowserObject.prototype.Get = function(Name) {
@@ -75,39 +99,27 @@ THE SOFTWARE.
                 {
                     throw new TypeError("PersistentBrowserObject: Invalid parameters passed to Set accessor. Either pass a single Key:Value pair as separate arguments or an object containing the Key:Value pairs you want to assign.");
                 }
-                PersistentBrowserObject.Store(this.Identifier + 'Object', Instance);
+                this.Store(this.Identifier + 'Object', Instance);
             };
             
             PersistentBrowserObject.prototype.Delete = function(Name) {
                 var Instance = this.GetInstance();
                 delete Instance[Name];
-                PersistentBrowserObject.Store(this.Identifier + 'Object', Instance);
+                this.Store(this.Identifier + 'Object', Instance);
             };
         }
         this.Identifier = Identifier;
-        if(MemoryCache===undefined)
+        if(CustomFallbackList !== undefined)
         {
-            this.CacheType = PersistentBrowserObject.Cache.None;
+            this.FallbackList = CustomFallbackList;
         }
-        else
-        {
-            this.CacheType = MemoryCache;
-        }
-        
-        this.InstanceCache = null;
-        if(!PersistentBrowserObject.Exists(this.Identifier + 'Object'))
-        {   
-            PersistentBrowserObject.Store(this.Identifier + 'Object', {});
-        }
-        
-        if(this.CacheType==PersistentBrowserObject.Cache.Instance||this.CacheType==PersistentBrowserObject.Cache.Shared)
-        {
-            this.GetInstance(); //Called to initialize cache if needed
-        }
+        InitializeInternals.call(this, MemoryCache);
     }
     
+    //Enums for the types of cache users can pass to the constructor
     PersistentBrowserObject.Cache = {'None':0, 'Instance': 1, 'Shared': 2};
     
+    //Function you can call to clean the shared cache, especially useful for apps that don't load new pages often
     PersistentBrowserObject.CleanSharedCache = function(Key){
         if(Key)
         {
@@ -119,18 +131,39 @@ THE SOFTWARE.
         }
     };
     
-    PersistentBrowserObject.Store = function(Key, Value){
-        localStorage[Key] = JSON.stringify(Value);
+    //Logic to enumerate a list of storage APIs and use the first one that is supported by the browser.
+    //The logic is deliberately hidden away in a closure while the list it operates on is deliberately exposed through
+    //the prototype and meant to allow users to customize the list.
+    //See the default file for some predefined APIs and the default value for the list
+    PersistentBrowserObject.prototype.FallbackList = [];
+    function ExecuteOnFallbackList()
+    {
+        var Index;
+        for(Index=0; Index<this.FallbackList.length; Index++)
+        {
+            if(this.FallbackList[Index].Supported())
+            {
+                //console.log("ExecuteOnFallbackList["+arguments[0]+"]");
+                //console.log(Array.prototype.slice.call(arguments, 1));
+                return this.FallbackList[Index][arguments[0]].apply(this, Array.prototype.slice.call(arguments, 1));
+            }
+        }
+    }
+    
+    //Those functions are used internally and call the logic to check the fallback list
+    //to store objects in the storage, retrieve objects in the storage and check if they are stored
+    //They can be used as hooks by users to bypass the fallback list althogether
+    PersistentBrowserObject.prototype.Store = function(Key, Value){
+        ExecuteOnFallbackList.call(this, 'Store', Key, Value);
+    };
+    PersistentBrowserObject.prototype.Retrieve = function(Key){
+        return ExecuteOnFallbackList.call(this, 'Retrieve', Key);
+    };
+    PersistentBrowserObject.prototype.Exists = function(Key){
+        return ExecuteOnFallbackList.call(this, 'Exists', Key);
     };
     
-    PersistentBrowserObject.Retrieve = function(Key){
-        return JSON.parse(localStorage[Key]);
-    };
-    
-    PersistentBrowserObject.Exists = function(Key){
-        return localStorage[Key] !== undefined;
-    };
-    
+    //Expose the constructor, either in jQuery if present, else the global object
     if(window.jQuery===undefined)
     {
         window.PersistentBrowserObject = PersistentBrowserObject;
