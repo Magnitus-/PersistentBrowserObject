@@ -3,7 +3,7 @@ PersistentBrowserObject
 
 This library is used to give more of an object-oriented feel to the localStorage API by default. 
 
-It also allows for a fair amount of optimization: caching, custom storage and specification of an ordering of fallback storage solutions, in order of priority. 
+It also supports caching, sessionStorage, cookies, memory storage and a customisable array of fallback solutions.
 
 Requirements
 ============
@@ -17,7 +17,9 @@ Requirements
 What Comes With It
 ==================
 
-- The library, in its original programmer-friendly format and minified.
+- The human-friendly library which comprise both the main file and the defaults file (both required if you want a working solution out of the box)
+
+- A production-friendly minimized version of the library which includes both the main and defaults files in one minized file.
 
 - The unit tests I created for the library. You can run them by opening the Tests.html file with your browser.
 
@@ -92,26 +94,85 @@ PersistentBrowserObject.CleanSharedCache();
 Customization
 =============
 
-Note: Obseleted by latest changes. Documentation update to come soon.
+The library gives you a lot of freedom to customize the storage/retrieval of objects.
 
-By default, the library uses the built-in JSON object (ie, window.JSON) to render and parse JSON and the built-in localStorage object (ie, window.localStorage) for permanent storage.
+You can customize the library in 2 different manners.
 
-If you'd prefer a different solution (ie, custom JSON library, sessionStorage instead of localStorage, cookie fallback for browsers that don't support localStorage, etc), you can assign your own functions to the following properties:
+1) Total Overhaul
 
-- PersistentBrowserObject.Store
+Internally, the library calls the following 3 functions:
 
-This method takes a key as its first argument, a value as its second argument and associates the value with the key in the permanent storage.
+- PersistentBrowserObject.prototype.Store
+
+This method takes a key (object identifier) as its first argument, a value (Object instance) as its second argument and associates the value with the key in the permanent storage.
 
 If the key doesn't exist, it is created with the given value, else it is updated with the given value.
 
-- PersistentBrowserObject.Retrieve
+- PersistentBrowserObject.prototype.Retrieve
 
-This method takes a key as its only argument and fetches the value associated with the key in the permanent storage.
+This method takes a key (object identifier) as its only argument and fetches the value (Object instance) associated with the key in the permanent storage.
 
 If the key is not found, it returns undefined.
 
-- PersistentBrowserObject.Exists
+- PersistentBrowserObject.prototype.Exists
 
 This method returns true if the key exists in the permanent storage, else it returns false.
 
-As long as you follow the above interface, the library will work with your custom functions. Feel free to tweak the Tests.js in order to test it if you are unsure.
+By assigning your own functions that behave outwardly like the defaults, you gain total control over how object storage is handled.
+
+2) Working with the Fallback List
+
+The following prototype property is defined:
+
+PersistentBrowserObject.prototype.FallbackList
+
+This is an array of storage solutions that the library will iterate over, stopping at the first storage solution that is supported.
+
+Each element of the array is an object instance that has the following methods:
+
+- Store(Key, Value)
+
+Stores the Object instance 'Value' under the identifier 'Key'
+
+- Retrieve(Key)
+
+Retrieves the Object instance stored under identifier 'Key'
+
+- Exists(Key)
+
+Returns true if there is an Object instance stored under identifier 'Key'
+
+- Supported()
+
+Returns true if the current execution environment allows the methods (Store, Retrieve, Exists) to execute properly.
+
+By default, the library provides the following objects which support the above API:
+
+- PersistentBrowserObject.Storage.localStorage
+- PersistentBrowserObject.Storage.sessionStorage
+- PersistentBrowserObject.Storage.Memory
+- PersistentBrowserObject.Storage.Cookie
+
+It goes without saying that you can also define your own.
+
+This is the default value of the library:
+
+PersistentBrowserObject.prototype.FallbackList = [PersistentBrowserObject.Storage.localStorage]
+
+You can assign a custom array of values such as:
+
+```javascript
+PersistentBrowserObject.prototype.FallbackList = [PersistentBrowserObject.Storage.localStorage, PersistentBrowserObject.Storage.Cookie]
+```
+
+The above would use PersistentBrowserObject.Storage.localStorage by default to store objects, except for browsers that don't support localStorage in which case PersistentBrowserObject.Storage.Cookie would be used instead.
+
+If you override the PersistentBrowserObject.prototype.FallbackList property, you better do so before you create any PersistentBrowserObject objects instances.
+
+Additionally, you can pass a custom fallback array to an instance's constructor call in which case it will only apply to that instance.
+
+An example of the syntax:
+
+```javascript
+var Instance = new jQuery.PersistentBrowserObject('SimpleObject', jQuery.PersistentBrowserObject.Cache.None, [PersistentBrowserObject.Storage.localStorage, PersistentBrowserObject.Storage.Cookie]);
+```
