@@ -176,3 +176,8 @@ An example of the syntax:
 ```javascript
 var Instance = new jQuery.PersistentBrowserObject('SimpleObject', jQuery.PersistentBrowserObject.Cache.None, [PersistentBrowserObject.Storage.localStorage, PersistentBrowserObject.Storage.Cookie]);
 ```
+
+jQuery.PersistentBrowserObject... really!?!?!
+=============================================
+
+window.PBO = jQuery.PersistentBrowserObject; //Now, you just type PBO :).
