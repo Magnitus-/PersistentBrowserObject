@@ -91,6 +91,14 @@ QUnit.test("No Cache Memory Storage, Singleton", function( assert ) {
     SingletonStorageTest(assert, Clear, [jQuery.PersistentBrowserObject.Storage.Memory]);
 });
 
+QUnit.test("No Cache Cookie Storage, Singleton", function( assert ) {
+    function Clear()
+    {
+        document.cookie = "Test=1;expires="+(new Date(0)).toGMTString();
+    }
+    SingletonStorageTest(assert, Clear, [jQuery.PersistentBrowserObject.Storage.Cookie]);
+});
+
 QUnit.test("No Cache Default localStorage Storage, Multiple Instances", function( assert ) {
     function Clear()
     {
@@ -110,9 +118,40 @@ QUnit.test("No Cache sessionStorage Storage, Multiple Instances", function( asse
 QUnit.test("No Cache Memory Storage, Multiple Instances", function( assert ) {
     function Clear()
     {
-        sessionStorage.clear();
+        jQuery.PersistentBrowserObject.Storage.Memory.Clear();
     }
     ConcurrentStorageTest(assert, Clear, [jQuery.PersistentBrowserObject.Storage.Memory]);
+});
+
+QUnit.test("No Cache Cookie Storage, Multiple Instances", function( assert ) {
+    function Clear()
+    {
+        document.cookie = "Test=1;expires="+(new Date(0)).toGMTString();
+        document.cookie = "Test2=1;expires="+(new Date(0)).toGMTString();
+    }
+    ConcurrentStorageTest(assert, Clear, [jQuery.PersistentBrowserObject.Storage.Cookie]);
+});
+
+QUnit.test("Fallback Logic, Singleton and Multiple Instance", function( assert ) {
+    function Clear()
+    {
+        localStorage.clear();
+    }
+    var NonExistentStorage = {};
+    NonExistentStorage['Store'] = function(Key, Value){
+        DoesNotExist[Key] = JSON.stringify(Value);
+    };
+    NonExistentStorage['Retrieve'] = function(Key){
+        return JSON.parse(DoesNotExist[Key]);
+    };
+    NonExistentStorage['Exists'] = function(Key){
+        return DoesNotExist[Key] !== undefined;
+    };
+    NonExistentStorage['Supported'] = function(){
+        return window.DoesNotExist !== undefined;
+    };
+    SingletonStorageTest(assert, Clear, [NonExistentStorage, jQuery.PersistentBrowserObject.Storage.localStorage]);
+    ConcurrentStorageTest(assert, Clear, [NonExistentStorage, jQuery.PersistentBrowserObject.Storage.localStorage]);
 });
 
 QUnit.test("Instance Caching", function( assert ) {

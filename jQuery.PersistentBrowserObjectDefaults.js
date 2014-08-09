@@ -45,7 +45,7 @@ THE SOFTWARE.
         return localStorage[Key] !== undefined;
     };
     PersistentBrowserObject.Storage['localStorage']['Supported'] = function(){
-        return localStorage !== undefined;
+        return window.localStorage !== undefined;
     };
     
     PersistentBrowserObject.Storage['sessionStorage'] = {};
@@ -59,7 +59,7 @@ THE SOFTWARE.
         return sessionStorage[Key] !== undefined;
     };
     PersistentBrowserObject.Storage['sessionStorage']['Supported'] = function(){
-        return sessionStorage !== undefined;
+        return window.sessionStorage !== undefined;
     };
     
     var Memory = new Object();
@@ -76,6 +76,9 @@ THE SOFTWARE.
     PersistentBrowserObject.Storage['Memory']['Supported'] = function(){
         return true;
     };
+    PersistentBrowserObject.Storage['Memory']['Clear'] = function(){
+        var Memory = new Object();
+    };
     
     PersistentBrowserObject.Storage['Cookie'] = {};
     PersistentBrowserObject.Storage['Cookie']['Store'] = function(Key, Value){
@@ -90,7 +93,7 @@ THE SOFTWARE.
         {
             Ending = document.cookie.length;
         }
-        return JSON.parse(decodeURIComponent(document.cookie.substring(Beginning + Key.length, Ending)));
+        return JSON.parse(decodeURIComponent(document.cookie.substring(Beginning + BeginsWith.length, Ending)));
     };
     PersistentBrowserObject.Storage['Cookie']['Exists'] = function(Key){
         var BeginsWith = encodeURIComponent(Key) + "=";
