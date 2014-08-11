@@ -107,6 +107,18 @@ THE SOFTWARE.
                 delete Instance[Name];
                 this.Store(this.Identifier + 'Object', Instance);
             };
+            
+            PersistentBrowserObject.prototype.DeleteAll = function() {
+                var Instance = this.GetInstance(), Key;
+                for(Key in Instance)
+                {
+                    if(Instance.hasOwnProperty(Key))
+                    {
+                        delete Instance[Key];
+                    }
+                }
+                this.Store(this.Identifier + 'Object', Instance);
+            };
         }
         this.Identifier = Identifier;
         if(CustomFallbackList !== undefined)

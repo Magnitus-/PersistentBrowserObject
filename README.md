@@ -180,4 +180,6 @@ var Instance = new jQuery.PersistentBrowserObject('SimpleObject', jQuery.Persist
 jQuery.PersistentBrowserObject... really!?!?!
 =============================================
 
+```javascript
 window.PBO = jQuery.PersistentBrowserObject; //Now, you just type PBO :).
+```

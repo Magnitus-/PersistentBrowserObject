@@ -46,6 +46,8 @@ function SingletonStorageTest(assert, ClearFunction, CustomFallbackList)
     var ComplicatedGet = Test.Get('Complicated');
     //This is essentially a test of the browser's JSON encoder/parser, but for completeness...
     assert.ok(ComplicatedGet&&ComplicatedGet[0]&&ComplicatedGet[0]['str']&&ComplicatedGet[0]['str'][1]&&ComplicatedGet[0]['str'][1]==Complicated[0]['str'][1], "Confirming storage of complex objects works");
+    Test.DeleteAll();
+    assert.ok(Test.Get('Complicated') === undefined && Test.Get('One') === undefined && Test.Get('Three') === undefined, 'Confirming DeleteAll works.');
     ClearFunction();
 }
 
