@@ -45,7 +45,7 @@ THE SOFTWARE.
         return localStorage[Key] !== undefined;
     };
     PersistentBrowserObject.Storage['localStorage']['Supported'] = function(){
-        return window.localStorage !== undefined;
+        return window.localStorage !== undefined && window.JSON !== undefined;
     };
     
     PersistentBrowserObject.Storage['sessionStorage'] = {};
@@ -59,7 +59,7 @@ THE SOFTWARE.
         return sessionStorage[Key] !== undefined;
     };
     PersistentBrowserObject.Storage['sessionStorage']['Supported'] = function(){
-        return window.sessionStorage !== undefined;
+        return window.sessionStorage !== undefined && window.JSON !== undefined;
     };
     
     var Memory = new Object();
@@ -74,7 +74,7 @@ THE SOFTWARE.
         return Memory[Key] !== undefined;
     };
     PersistentBrowserObject.Storage['Memory']['Supported'] = function(){
-        return true;
+        return window.JSON !== undefined;
     };
     PersistentBrowserObject.Storage['Memory']['Clear'] = function(){
         var Memory = new Object();
@@ -100,7 +100,7 @@ THE SOFTWARE.
         return document.cookie.indexOf(BeginsWith) > -1;
     };
     PersistentBrowserObject.Storage['Cookie']['Supported'] = function(){
-        return document !== undefined && document.cookie !== undefined;
+        return document !== undefined && document.cookie !== undefined && window.JSON !== undefined;
     };
     
     //Default is to use localStorage with no fallback
