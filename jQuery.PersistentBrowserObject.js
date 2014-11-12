@@ -45,6 +45,19 @@ THE SOFTWARE.
         }
     }
     
+    function GetArrayProperty(Name)
+    {
+        var List = this.Get(Name);
+        if(Array.isArray(List))
+        {
+            return(List);
+        }
+        else
+        {
+            throw new TypeError("PersistentBrowserObject: Tried to do an array operation on a parameter that is not an array.");
+        }
+    }
+    
     //Constructor
     function PersistentBrowserObject(Identifier, MemoryCache, CustomFallbackList) 
     {   
@@ -119,13 +132,59 @@ THE SOFTWARE.
                 }
                 this.Store(this.Identifier + 'Object', Instance);
             };
+            
+            PersistentBrowserObject.prototype.Push = function(Name) {
+                var List = GetArrayProperty.call(this, Name);
+                var Count = Array.prototype.push.apply(List, Array.prototype.slice.call(arguments, 1));
+                this.Set(Name, List);
+                return Count;
+            };
+            
+            PersistentBrowserObject.prototype.Pop = function(Name) {
+                var List = GetArrayProperty.call(this, Name);
+                var ToReturn = List.pop();
+                this.Set(Name, List);
+                return ToReturn;
+            };
+            
+            PersistentBrowserObject.prototype.Shift = function(Name) {
+                var List = GetArrayProperty.call(this, Name);
+                var ToReturn = List.shift();
+                this.Set(Name, List);
+                return ToReturn;
+            };
+            
+            PersistentBrowserObject.prototype.Unshift = function(Name, Value) {
+                var List = GetArrayProperty.call(this, Name);
+                var Count = Array.prototype.unshift.apply(List, Array.prototype.slice.call(arguments, 1));
+                this.Set(Name, List);
+                return Count;
+            };
+            
+            PersistentBrowserObject.prototype.Length = function(Name) {
+                var List = GetArrayProperty.call(this, Name);
+                return(List.length);
+            };
+            
+            PersistentBrowserObject.prototype.GetIndex = function(Name, Index) {
+                var List = GetArrayProperty.call(this, Name);
+                return(List[Index]);
+            };
         }
-        this.Identifier = Identifier;
-        if(CustomFallbackList !== undefined)
+        
+        if(this instanceof PersistentBrowserObject)
         {
-            this.FallbackList = CustomFallbackList;
+            this.Identifier = Identifier;
+            if(CustomFallbackList !== undefined)
+            {
+                this.FallbackList = CustomFallbackList;
+            }
+            InitializeInternals.call(this, MemoryCache);
         }
-        InitializeInternals.call(this, MemoryCache);
+        else
+        {
+            return new PersistentBrowserObject(Identifier, MemoryCache, CustomFallbackList);
+        }
     }
     
     //Enums for the types of cache users can pass to the constructor

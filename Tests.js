@@ -188,3 +188,33 @@ QUnit.test("Shared Caching", function( assert ) {
     localStorage.clear();
     assert.ok(Test2.Get('One')&&Test2.Get('One')==1, "Confirming beyond doubt that getter is fetched from memory with shared cache.");
 });
+
+QUnit.test("Array Functionality", function( assert) {
+    localStorage.clear();
+    var Test = new jQuery.PersistentBrowserObject('Test');
+    var Lengths = [];
+    Test.Set('SomeArray', []);
+    Lengths.push(Test.Length('SomeArray'));
+    var List = Test.Get('SomeArray');
+    List[0] = 3;
+    Test.Set('SomeArray', List);
+    Lengths.push(Test.Length('SomeArray'));
+    Test.Push('SomeArray', 4, 5);
+    Test.Unshift('SomeArray', 1, 2);
+    Lengths.push(Test.Length('SomeArray'));
+    List = Test.Get('SomeArray');
+    assert.ok(List[0]==1&&List[1]==2&&List[2]==3, "Confirming that unshift works");
+    assert.ok(List[3]==4&&List[4]==5&&List[2]==3, "Confirming that pop works");
+    assert.ok(Lengths[0]==0&&Lengths[1]==1&&Lengths[2]==5, "Confirming that Length works");
+    assert.ok(Test.GetIndex('SomeArray', 0)==1&&Test.GetIndex('SomeArray', 4)==5, "Confirming that GetIndex works");
+    assert.ok(Test.Pop('SomeArray')==5&&Test.Length('SomeArray')==4, "Confirming that Pop works");
+    assert.ok(Test.Shift('SomeArray')==1&&Test.Length('SomeArray')==3, "Confirming that Shift works");
+    localStorage.clear();
+});
+
+QUnit.test("Scope Safe Constructor", function( assert) {
+    localStorage.clear();
+    var Test = jQuery.PersistentBrowserObject('Test');
+    assert.ok(window.Identifier===undefined&&window.FallbackList===undefined&&Test instanceof jQuery.PersistentBrowserObject, "Confirming that constructor is scope safe");
+    localStorage.clear();
+});

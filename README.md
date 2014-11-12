@@ -23,6 +23,17 @@ What Comes With It
 
 - The unit tests I created for the library. You can run them by opening the Tests.html file with your browser.
 
+Library Calls Convention
+========================
+
+In order to avoid pollution the jQuery object, only the LazyLanguageLoader property is added to the jQuery object (ie, jQuery.LazyLanguageLoader).
+
+Library calls are made as follows:
+
+jQuery.LazyLanguageLoader('FunctionName', ArgumentsAsArray);
+
+
+
 How To Use The Library In Your code
 ===================================
 
@@ -175,6 +186,61 @@ An example of the syntax:
 
 ```javascript
 var Instance = new jQuery.PersistentBrowserObject('SimpleObject', jQuery.PersistentBrowserObject.Cache.None, [PersistentBrowserObject.Storage.localStorage, PersistentBrowserObject.Storage.Cookie]);
+```
+
+Array Convenience Calls
+=======================
+
+The library includes a couple of accessors that are wrappers to Array methods as a convenience to operate on Array properties.
+
+For a long string of array operations, you may be best served by something like this:
+
+```javascript
+var SomeObject = new jQuery.PersistentBrowserObject('SomeObject');
+var TheArray = SomeObject.Get('AnArrayProperty');
+//Do manipulations directly on TheArray
+SomeObject.Set('AnArrayProperty', TheArray)
+```
+
+However, when you just need to do less than a handful of array operations, the methods presented below may make your code more concise.
+
+The methods and their signatures are:
+
+```javascript
+Push(<PropertyName>, <Item1 to push>, <Item2 to push>, ...)
+```
+
+```javascript
+Unshift(<PropertyName>, <Item1 to push>, <Item2 to push>, ...)
+```
+
+```javascript
+Pop(<PropertyName>)
+```
+
+```javascript
+Shift(<PropertyName>)
+```
+
+```javascript
+Length(<PropertyName>)
+```
+
+```javascript
+GetIndex(<PropertyName>, <Index>)
+```
+
+Ex:
+```javascript
+var SomeObject = new jQuery.PersistentBrowserObject('SomeObject');
+SomeObject.Set('ArrayProperty', []);
+SomeObject.Length('ArrayProperty');  //returns 0
+SomeObject.Push('ArrayProperty', 3, 4, 5);  //Pushes 3, 4 and 5 at the end of the array
+SomeObject.Unshift('ArrayProperty', 1, 2);  //Pushes 1 and 2 at the beginning of the array
+SomeObject.Length('ArrayProperty');  //returns 5
+SomeObject.Pop('ArrayProperty');    //Removes the value 5 at the end of the array and returns it
+SomeObject.Shift('ArrayProperty');    //Removes the value 1 at the beginning of the array and returns it
+SomeObject.GetIndex('ArrayProperty', 0);    //Returns the value of index 0 which is 2
 ```
 
 jQuery.PersistentBrowserObject... really!?!?!
