@@ -170,6 +170,13 @@ THE SOFTWARE.
                 var List = GetArrayProperty.call(this, Name);
                 return(List[Index]);
             };
+            
+            PersistentBrowserObject.prototype.EnsureDefined = function(Name, Value) {
+                if(this.Get(Name)===undefined)
+                {
+                    this.Set(Name, Value);
+                }
+            };
         }
         
         if(this instanceof PersistentBrowserObject)

@@ -33,7 +33,6 @@ Library calls are made as follows:
 jQuery.LazyLanguageLoader('FunctionName', ArgumentsAsArray);
 
 
-
 How To Use The Library In Your code
 ===================================
 
@@ -53,6 +52,10 @@ InstanceSame.Set('SameStorageAsInstance', 'Indeed');
 console.log(Instance.Get('SameStorageAsInstance'));                      //logs 'Indeed'
 var Other = new jQuery.PersistentBrowserObject('DifferentObject'); 
 console.log(Other.Get('Name'));                                          //logs 'undefined', because it is 'DifferentObject' and uses a different storage entry from 'SimpleObject'
+Other.EnsureDefined('ImportantProperty', 'Yes');                         //Assigns 'Yes' to 'ImportantProperty' if it isn't defined.
+console.log(Other.Get('ImportantProperty'));                             //logs 'Yes'
+Other.EnsureDefined('ImportantProperty', 'WillNotBeAssigned');
+console.log(Other.Get('ImportantProperty'));                             //logs 'Yes'
 ```
 
 Caching

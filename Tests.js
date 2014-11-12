@@ -41,6 +41,10 @@ function SingletonStorageTest(assert, ClearFunction, CustomFallbackList)
     assert.ok(Test.Get('One') && Test.Get('One') == -1 && Test.Get('Two') && Test.Get('Two') == -2 && Test.Get('Three') && Test.Get('Three') == -3, "Confirming getter works after object argument setter and value overwrite.");
     Test.Delete('Two');
     assert.ok(typeof Test.Get('Two') == 'undefined', 'Confirming deleter works.');
+    Test.EnsureDefined('NowDefined', 1);
+    assert.ok(Test.Get('NowDefined')==1, "Confirming that EnsureDefined sets non-existent property to specified default value.");
+    Test.EnsureDefined('NowDefined', 5);
+    assert.ok(Test.Get('NowDefined')==1, "Confirming that EnsureDefined doesn't overwrite the value of properties that exist.");
     var Complicated = [{'str': ['allo','\\\'\"\/\b\f\n\r\t\u9999']},1];
     Test.Set('Complicated',Complicated);
     var ComplicatedGet = Test.Get('Complicated');
